@@ -9,7 +9,7 @@ class ComplaintDetailResponse {
   final int page_start;
   final int per_page;
   final int count;
-  final ComplaintDetail data;
+  final Complaintetailservice data;
 
   ComplaintDetailResponse({
     required this.status,
@@ -28,13 +28,13 @@ class ComplaintDetailResponse {
       per_page: json['per_page'] ?? 0,
       count: json['count'] ?? 0,
       data: json['data'] != null
-          ? ComplaintDetail.fromJson(json['data'])
-          : ComplaintDetail.empty(), // ✅ SAFE
+          ? Complaintetailservice.fromJson(json['data'])
+          : Complaintetailservice.empty(), // ✅ SAFE
     );
   }
 }
 
-class ComplaintDetail {
+class Complaintetailservice {
   final String complaintId;
   final String complaint_no;
   final String machine;
@@ -62,7 +62,7 @@ class ComplaintDetail {
   final List<Checklist> checklist;
   final PdfModel? pdf;
 
-  ComplaintDetail({
+  Complaintetailservice({
     required this.complaintId,
     required this.complaint_no,
     required this.machine,
@@ -91,8 +91,8 @@ class ComplaintDetail {
     required this.pdf,
   });
 
-  factory ComplaintDetail.empty() {
-    return ComplaintDetail(
+  factory Complaintetailservice.empty() {
+    return Complaintetailservice(
       complaintId: '',
       complaint_no: '',
       machine: '',
@@ -122,9 +122,9 @@ class ComplaintDetail {
     );
   }
 
-  factory ComplaintDetail.fromJson(Map<String, dynamic> json) {
-    return ComplaintDetail(
-      complaintId: json['complaint_id'] ?? '',
+  factory Complaintetailservice.fromJson(Map<String, dynamic> json) {
+    return Complaintetailservice(
+      complaintId: json['complaint_id']?.toString() ?? '',
       complaint_no: json['complaint_no'] ?? '',
       machine: json['machine'] ?? '',
       machine_no: json['machine_no'] ?? '',
@@ -146,17 +146,40 @@ class ComplaintDetail {
       machineSrNo: json['machine_sr_no'] ?? '',
       assignee: json['assignee'] ?? '',
       assigned_to: json['assigned_to'] ?? '',
-      images: (json['images'] as List?)
-      ?.map((e) => e.toString())
-      .toList() ?? [],
-      requiredParts: (json['required_parts'] as List? ?? [])
-          .map((e) => RequiredPart.fromJson(e))
-          .toList(),
-      checklist: (json['checklist'] as List? ?? [])
-          .map((e) => Checklist.fromJson(e))
-          .toList(),
-      pdf: json['pdf'] != null ? PdfModel.fromJson(json['pdf']) : null,
 
+      // SAFE IMAGES
+      images: json['images'] is List
+          ? (json['images'] as List)
+          .map((e) => e.toString())
+          .toList()
+          : [],
+
+      // SAFE REQUIRED PARTS
+      requiredParts: json['required_parts'] is List
+          ? (json['required_parts'] as List)
+          .where((e) => e is Map<String, dynamic>)
+          .map((e) => RequiredPart.fromJson(
+        e as Map<String, dynamic>,
+      ))
+          .toList()
+          : [],
+
+      // SAFE CHECKLIST
+      checklist: json['checklist'] is List
+          ? (json['checklist'] as List)
+          .where((e) => e is Map<String, dynamic>)
+          .map((e) => Checklist.fromJson(
+        e as Map<String, dynamic>,
+      ))
+          .toList()
+          : [],
+
+      // SAFE PDF
+      pdf: json['pdf'] is Map<String, dynamic>
+          ? PdfModel.fromJson(
+        json['pdf'] as Map<String, dynamic>,
+      )
+          : null,
     );
   }
 

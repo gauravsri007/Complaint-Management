@@ -105,64 +105,88 @@ class AuthApiService {
       }
     }
 
-
-    Future<ComplaintsResponse> complaints({
-      required String user_id,
-      required String role_id,
-      required int page_start,
-      required int type,
-
-    }) async {
-      _dio.options.headers["Accept-Encoding"] = "gzip, deflate";
-      _dio.transformer = BackgroundTransformer();
+  Future<ComplaintsResponse> complaints({
+    required String user_id,
+    required String role_id,
+    required int page_start,
+    required int type,
+  }) async {
+    try {
       final prefs = await SharedPreferences.getInstance();
-      String token = prefs.getString('token') ?? '';
-      try {
-        final formData = FormData.fromMap({
-          'userid': user_id,
-          'role_id': role_id,
-          'page_start': page_start,
-          'per_page':10,
-          'assigned':type
-        });
-        print('Page Start -> $page_start');
-        print("formData: $formData)");
-        final response = await _dio.post(
-          '/complaint_list',
-          data: formData,
-          options: Options(
-            headers: {
-              "Authorization": "Bearer $token",
-              "Accept": "application/json",
-            },
-            contentType: 'multipart/form-data',
-            responseType: ResponseType.plain, // <— force bytes
-            validateStatus: (_) => true, // allow 200/400/500 printing
-          ),
-        );
-        print("STATUS: ${response.statusCode}");
-        // print("RAW: ${response.data}");
-        // Convert bytes (gzip/deflate/br) → text
-        final raw = response.data.toString().trim();
+      final token = prefs.getString('token') ?? '';
 
-        if (raw.isEmpty) {
-          throw Exception("Empty response");
-        }
+      final formData = FormData.fromMap({
+        'userid': user_id,
+        'role_id': role_id,
+        'page_start': page_start,
+        'per_page': 10,
+        'assigned': type,
+      });
 
-        final start = raw.indexOf('{');
+      debugPrint("PAGE START => $page_start");
+      debugPrint("FORM DATA => ${formData.fields}");
 
-        if (start == -1) {
-          throw Exception("Response not JSON: $raw");
-        }
+      final response = await _dio.post(
+        '/complaint_list',
+        data: formData,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Accept": "application/json",
+          },
+          contentType: 'multipart/form-data',
+          responseType: ResponseType.plain,
+          validateStatus: (_) => true,
+        ),
+      );
 
-        final jsonBody = raw.substring(start);
-        final Map<String, dynamic> jsonMap = jsonDecode(jsonBody);
-        return ComplaintsResponse.fromJson(jsonMap);
-      } catch (e) {
-        print("Login exception: $e");
-        rethrow;
+      debugPrint("STATUS CODE => ${response.statusCode}");
+      debugPrint("RAW RESPONSE => ${response.data}");
+
+      // Convert response safely
+      final raw = response.data?.toString().trim() ?? '';
+
+      if (raw.isEmpty) {
+        throw Exception("Empty response from server");
       }
+
+      // Find JSON start
+      final start = raw.indexOf('{');
+
+      if (start == -1) {
+        throw Exception("Invalid JSON response: $raw");
+      }
+
+      final jsonBody = raw.substring(start);
+
+      // Decode JSON
+      final decoded = jsonDecode(jsonBody);
+
+      if (decoded is! Map<String, dynamic>) {
+        throw Exception("Expected JSON object");
+      }
+
+      debugPrint("JSON TYPE => ${decoded.runtimeType}");
+      debugPrint("DATA TYPE => ${decoded['data'].runtimeType}");
+
+      // Handle invalid data response
+      if (decoded['data'] != null &&
+          decoded['data'] is! List) {
+        debugPrint("WARNING: data is not List");
+        decoded['data'] = [];
+      }
+
+      return ComplaintsResponse.fromJson(decoded);
+
+    } on DioException catch (e) {
+      debugPrint("DIO ERROR => ${e.message}");
+      rethrow;
+    } catch (e, stackTrace) {
+      debugPrint("COMPLAINTS EXCEPTION => $e");
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
     }
+  }
 
 
   Future<StatesResponse> fetchStates() async {
@@ -941,4 +965,8 @@ class AuthApiService {
     }
   }
 
+}
+
+extension on JsonCodec {
+  void operator [](String other) {}
 }//End

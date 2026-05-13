@@ -6,6 +6,7 @@ import 'package:crm_app/Model/complaint_details_model.dart';
 import 'package:crm_app/Model/complaints.dart';
 import 'package:crm_app/Model/login_models.dart';
 import 'package:crm_app/Model/machine_number_model.dart';
+import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/app/complaintDetail.dart';
@@ -327,7 +328,7 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
 
       dropdownDecoratorProps: DropDownDecoratorProps(
         dropdownSearchDecoration: InputDecoration(
-          labelText: "Machine Number",
+          labelText: "Serial Number",
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -586,7 +587,7 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
 
       final matchesMachine =
           filterMachineNo == null ||
-              c.machine_no.trim() == filterMachineNo!.machineNo.trim();
+              c.machineNo.trim() == filterMachineNo!.machineNo.trim();
 
       final matchesModel =
           filterModel == null ||
@@ -630,9 +631,9 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
   void initState() {
     super.initState();
 
-    getComplaintCount();
-
     _tabController = TabController(length: 2, vsync: this);
+
+    getComplaintCount();
 
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
@@ -823,8 +824,9 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
     required int page,
     required int type,
   }) async {
-    final isAssigned = type == 1;
+    debugPrint("_fetchComplaints API called");
 
+    final isAssigned = type == 1;
     // ✅ separate loading per tab
     if (isAssigned && _isLoadingAssigned) return;
     if (!isAssigned && _isLoadingUnassigned) return;
@@ -848,8 +850,11 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
         page_start: page,
         type: type,
       );
+      debugPrint("res.data: $res.data");
+      debugPrint("res.status: $res.status");
 
       if (res.status == true && res.data != null) {
+
         final List<ComplaintDetail> newData = res.data;
 
         setState(() {
@@ -1256,7 +1261,8 @@ class ComplaintListView extends StatelessWidget {
             machineModels: [],
             machineNumbers: [],
             serviceEngineers: [],
-            isAssignedList:complaint.assigned_to == "" ? false : true,
+            isAssignedList:complaint.assignedTo == "" ? false : true, 
+            complaintDetails: Complaintetailservice(complaintId: '', complaint_no: '', machine: '', machine_no: '', machineModel: '', hourMeter: '', status: '', workDone: '', pendingWork: '', complaint: '', createdBy: '', createdDate: '', updatedBy: '', updatedDate: '', contact_person_name: '', contact_person_number: '', lastupdatedDate: '', stateName: '', cityName: '', machineSrNo: '', assignee: '', assigned_to: '', images: [], requiredParts: [], checklist: [], pdf: null),
           );
       },
     );
@@ -1366,6 +1372,7 @@ class ComplaintListView extends StatelessWidget {
 
 class ComplaintCard extends StatelessWidget {
   final ComplaintDetail complaint;
+  final Complaintetailservice complaintDetails;
   final Future<void> Function() onReload;
   final List<String> machineNumbers;
   final List<String> machineModels;
@@ -1384,8 +1391,58 @@ class ComplaintCard extends StatelessWidget {
     required this.machineModels,
     required this.serviceEngineers,
     required this.onStatusUpdate,
-    required this.isAssignedList,
+    required this.isAssignedList, 
+    required this.complaintDetails,
   });
+
+  void _downloadPdf(
+      BuildContext context,
+      ComplaintDetail complaint,
+      ) async {
+
+    final url = complaint.pdf;
+
+    debugPrint("url => $url");
+
+    if (url == null || url.isEmpty) {
+      _showMessage(context, "PDF not available");
+      return;
+    }
+
+    try {
+
+      final dir = "/storage/emulated/0/Download";
+      final filePath =
+          "$dir/complaint_${complaint.complaintId}.pdf";
+
+      await Dio().download(url, filePath);
+
+      _showMessage(
+        context,
+        "PDF downloaded to Downloads",
+      );
+
+    } catch (e) {
+
+      debugPrint("DOWNLOAD ERROR => $e");
+
+      _showMessage(
+        context,
+        "Download failed",
+      );
+    }
+  }
+
+  void _showMessage(
+      BuildContext context,
+      String msg,
+      ) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1495,127 +1552,178 @@ class ComplaintCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14)),
       color: isResolved ? Colors.green.shade50 : Colors.white,
-      child:
-      ListTile(
-        title: Text(
-          "${AppData.shared.formatDate(complaint.createdDate)} • ${complaint.cityName}",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppData.primaryBlue,
-            fontSize: 14,
-          ),
-        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
 
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Complaint No: ${complaint.complaint_no}',
-              style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-            Text(
-              'Machine No: ${complaint.machine_no}',
-              style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-        Text(
-              'Model: ${complaint.machineModel}',
-              style: const TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-            Text(
-              'Complaint: ${complaint.complaint}',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13,
-                fontWeight: FontWeight.bold,
+          onTap: () async {
+
+            final shouldReload = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ComplaintDetailPage(
+                  complaint: complaintDetails,
+                  complaint_id: complaint.complaintId,
+                  serviceEngineers: serviceEngineers,
+                  machineNumbers: machineNumbers,
+                  onAcknowledge: () {},
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Row(
+            );
+
+            if (shouldReload == true) {
+              await onReload();
+            }
+          },
+
+          child: Padding(      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          // LEFT CONTENT
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+
                 Text(
-                  !isAssignedList ? "" : ("Assignee: ${complaint.assignee}" ?? "-"),
+                  "${AppData.shared.formatDate(complaint.createdDate)} • ${complaint.cityName}",
                   style: TextStyle(
-                    color: !isAssignedList ? Colors.black : AppData
-                        .primaryBlue,
                     fontWeight: FontWeight.bold,
+                    color: AppData.primaryBlue,
                     fontSize: 14,
                   ),
                 ),
-              ],
-            ),
 
-            if (complaint.status == ComplaintStatus.open)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Container(
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                const SizedBox(height: 6),
 
-                  child: Text(
-                    "Click here to Acknowledge",
+                Text(
+                  'Complaint No: ${complaint.complaintNo}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                Text(
+                  'Serial Number: ${complaint.machineNo}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                Text(
+                  'Model: ${complaint.machineModel}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  'Complaint: ${complaint.complaint}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                if (isAssignedList) ...[
+                  const SizedBox(height: 6),
+
+                  Text(
+                    "Assignee: ${complaint.assignee}",
                     style: TextStyle(
                       color: AppData.primaryBlue,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                       fontSize: 13,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          // RIGHT SIDE
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+
+              // STATUS
+              GestureDetector(
+                onTap: () {
+                  showUpdateStatusPopup(
+                    context,
+                    complaint,
+                        (newStatus, remarks) {
+                      onStatusUpdate(complaint);
+                    },
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppData.primaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    complaint.status,
+                    style: TextStyle(
+                      color: isResolved
+                          ? Colors.green
+                          : AppData.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
                     ),
                   ),
                 ),
               ),
-          ],
-        ),
 
-        trailing: GestureDetector(
-          onTap: () {
-            showUpdateStatusPopup(
-              context,
-              complaint,
-                  (newStatus, remarks) {
-                complaint.status = newStatus.string;
-                onStatusUpdate(complaint);
-              },
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppData.primaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              complaint.status,
-              style: TextStyle(
-                color: isResolved ? Colors.green : AppData.primaryBlue,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+              const SizedBox(height: 12),
+
+              // DOWNLOAD BUTTON
+              if (isAssignedList && complaint.pdf != null)
+                InkWell(
+                  onTap: () {
+                    _downloadPdf(context, complaint);
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    // decoration: BoxDecoration(
+                    //   color: Colors.green.shade50,
+                    //   borderRadius: BorderRadius.circular(14),
+                    //   border: Border.all(
+                    //     color: Colors.green,
+                    //   ),
+                    // ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/serviceReport.png',
+                        width: 75,
+                        height: 75,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
-
-        onTap: () async {
-          final shouldReload = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ComplaintDetailPage(
-                complaint: complaint,
-                serviceEngineers: serviceEngineers,
-                machineNumbers: machineNumbers,
-                onAcknowledge: () {
-                  complaint.status = complaint.status;
-                },
-              ),
-            ),
-          );
-
-          if (shouldReload == true) {
-            await onReload();
-          }
-        },
+        ],
       ),
+    ),
+        )
     );
   }
 }

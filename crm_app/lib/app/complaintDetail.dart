@@ -11,12 +11,14 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/utilities/enums.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Model/check_list_model.dart';
 import '../utilities/user_local_storage.dart';
 
 class ComplaintDetailPage extends StatefulWidget {
-  final ComplaintDetail complaint;
+  final Complaintetailservice complaint;
+  final String complaint_id;
   final List<String> serviceEngineers;
   final List<String> machineNumbers;
   final VoidCallback onAcknowledge;
@@ -24,6 +26,7 @@ class ComplaintDetailPage extends StatefulWidget {
 
   const ComplaintDetailPage({
     required this.complaint,
+    required this.complaint_id,
     required this.serviceEngineers,
     required this.machineNumbers,
     required this.onAcknowledge,
@@ -35,7 +38,9 @@ class ComplaintDetailPage extends StatefulWidget {
 
 class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     with SingleTickerProviderStateMixin {
-  late ComplaintDetail complaint;
+  late Complaintetailservice complaint;
+  late String complaint_id;
+
   List<Employee> employees = [];
   List<PartItem> partsList = [];
 
@@ -77,25 +82,22 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   bool _isChecklistExpanded = false;
 
   List<ChecklistItem> checklist = [
-    ChecklistItem(title: "Engine Starting", options: ["Yes", "No"]),
-    ChecklistItem(title: "Hours Meter", options: ["Yes", "No"]),
-    ChecklistItem(title: "Key Switch", options: ["Yes", "No"]),
-    ChecklistItem(title: "Emergency Ground", options: ["Yes", "No"]),
-    ChecklistItem(title: "Emergency Platform", options: ["Yes", "No"]),
-
-    ChecklistItem(title: "Battery & Terminal", options: ["Yes", "No"]),
-    ChecklistItem(title: "Horn", options: ["Yes", "No"]),
-    ChecklistItem(title: "Light", options: ["Yes", "No"]),
-    ChecklistItem(title: "Wheel Rim Nut", options: ["Yes", "No"]),
-    ChecklistItem(title: "Hydraulic Cylinder Leakage", options: ["Yes", "No"]),
-    ChecklistItem(title: "Wire Hardness", options: ["Yes", "No"]),
-    ChecklistItem(title: "Break Operates Properly", options: ["Yes", "No"]),
-    ChecklistItem(title: "All Toggle Switch in place & works properly", options: ["Yes", "No"]),
-
-
-    ChecklistItem(title: "Engine Oil", options: ["Yes", "No"]),
-    ChecklistItem(title: "Hydraulic Oil", options: ["Yes", "No"]),
-    ChecklistItem(title: "Fuel Feed Pump", options: ["Yes", "No", "Electric"]),
+    ChecklistItem(title: "Engine Starting", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Hours Meter", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Key Switch", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Emergency Ground", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Emergency Platform", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Battery & Terminal", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Horn", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Light", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Wheel Rim Nut", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Hydraulic Cylinder Leakage", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Wire Hardness", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Break Operates Properly", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "All Toggle Switch in place & works properly", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Engine Oil", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Hydraulic Oil", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Fuel Feed Pump", options: ["Ok", "No", "Electric"]),
     ChecklistItem(
       title: "Function from Basket",
       options: ["OK", "Slow", "Not Working"],
@@ -104,11 +106,11 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
       title: "Function from Ground",
       options: ["OK", "Slow", "Not Working"],
     ),
-    ChecklistItem(title: "Joy Stick", options: ["Yes", "No"]),
-    ChecklistItem(title: "Hydraulic Pipe Leakage", options: ["Yes", "No"]),
-    ChecklistItem(title: "Machine free bypass/modification", options: ["Yes", "No","Corrected"]),
-    ChecklistItem(title: "Machine maintained by Opt", options: ["Yes", "No"]),
-    ChecklistItem(title: "Machine Service Due", options: ["Yes", "Due"]),
+    ChecklistItem(title: "Joy Stick", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Hydraulic Pipe Leakage", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Machine free bypass/modification", options: ["Ok", "No","Corrected"]),
+    ChecklistItem(title: "Machine maintained by Opt", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Machine Service Due", options: ["Ok", "No","Not Applicable"]),
   ];
   final _formKey = GlobalKey<FormState>();
 
@@ -132,7 +134,8 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   @override
   void initState() {
     super.initState();
-
+    complaint = widget.complaint; // ✅ IMPORTANT
+    complaint_id = widget.complaint_id;
     _initData();
     checkSession(context);
 
@@ -147,8 +150,6 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   }
 
   Future<void> _initData() async {
-    complaint = widget.complaint;
-    complaint = widget.complaint;          // 👈 MUST
     complaintHistoryList = [];
     currentUser = await UserLocalStorage.getSavedUser();
 
@@ -158,7 +159,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     if (complaint!.status == ComplaintStatus.open.string && currentUser?.role == UserRole.serviceEngineer.label) {
       complaintAcknowledge();
     } else {
-      widget.complaint.status = complaint.status;
+      complaint.status = complaint.status;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onAcknowledge();
       });
@@ -258,17 +259,18 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     setState(() => _isComplaintDetailsLoading = true);
     try {
       debugPrint('userId: ${user!.userId}');
+      debugPrint('complaintId: ${complaint_id}');
       final res = await _authService.getComplaintDetails(
-          complaint_id: complaint!.complaintId!,
+          complaint_id: complaint_id!,
       );
       if (res.status == true) {
         complaint = res.data;
-        // ✅ ADD THIS
+        // ✅ ADD THISr
         // if (complaint.checklist.isNotEmpty) {
         //   prefillChecklist(complaint.checklist.first);
         // }
         // debugPrint("RESPONSE IS -----------------------> ${complaint?.complaintId}");
-        debugPrint("RAW RESPONSE: ${jsonEncode(complaint?.toJson())}");
+        debugPrint("RAW RESPONSE:getComplaintDetails -> ${jsonEncode(complaint?.toJson())}");
         // print("requiredParts -> ${res.data.requiredParts.length}");
         debugPrint("pdf -> ${res.data.pdf?.pdf}");
 
@@ -513,7 +515,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
-  bool get isResolved => widget.complaint.status == ComplaintStatus.resolved;
+  bool get isResolved => complaint.status == ComplaintStatus.resolved;
 
   @override
   Widget build(BuildContext context) {
@@ -577,7 +579,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
   // --------------------- TAB 1: DETAILS --------------------- //
 
-  Widget buildDetailsTab(ComplaintDetail complaint) {
+  Widget buildDetailsTab(Complaintetailservice complaint) {
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
@@ -637,7 +639,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
               Divider(
                 thickness: 1,
-                color: Colors.grey.shade300,tt
+                color: Colors.grey.shade300,
               ),
               const SizedBox(height: 10),
 
@@ -650,7 +652,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
               infoTile(
                 Icons.calendar_today,
                 "Complaint Date",
-                naIfEmpty(AppData.shared.formatDate(complaint!.createdDate)),
+                naIfEmpty(AppData.shared.safeFormatDate(complaint!.createdDate)),
               ),
 
               infoTile(
@@ -661,7 +663,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
               infoTile(
                 Icons.confirmation_number,
-                "Machine No",
+                "Serial Number",
                 naIfEmpty(complaint?.machine_no),
               ),
 
@@ -703,17 +705,100 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
               infoTile(
                 Icons.error_outline,
                 "Last Updated",
-                naIfEmpty(AppData.shared.formatDate(complaint.updatedDate)),
+                naIfEmpty(AppData.shared.safeFormatDate(complaint.updatedDate)),
               ),
               infoTile(
                 Icons.error_outline,
                 "Site Contact Person Name",
                 naIfEmpty(complaint.contact_person_name),
               ),
-              infoTile(
-                Icons.error_outline,
-                "Site Contact Person No",
-                naIfEmpty(complaint.contact_person_number),
+              // infoTile(
+              //   Icons.error_outline,
+              //   "Site Contact Person No",
+              //   naIfEmpty(complaint.contact_person_number),
+              // ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+
+                    Icon(
+                      Icons.phone,
+                      size: 22,
+                      color: AppData.primaryBlue,
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+
+                          const Text(
+                            "Site Contact Person No",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
+                          ),
+
+                          GestureDetector(
+
+                            // CLICK TO CALL
+                            onTap: () async {
+
+                              final number =
+                                  complaint.contact_person_number ?? "";
+
+                              final uri = Uri.parse("tel:$number");
+
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri);
+                              }
+                            },
+
+                            // LONG PRESS TO COPY
+                            onLongPress: () async {
+
+                              final number =
+                                  complaint.contact_person_number ?? "";
+
+                              await Clipboard.setData(
+                                ClipboardData(text: number),
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Contact number copied",
+                                  ),
+                                ),
+                              );
+                            },
+
+                            child: Text(
+                              naIfEmpty(
+                                complaint.contact_person_number,
+                              ),
+
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+
+                                // LINK STYLE
+                                color: Colors.blue.shade700,
+
+                                decoration:
+                                TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 8),
@@ -965,7 +1050,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   }
 
 
-  Widget buildChecklistDisplaySection(ComplaintDetail complaint) {
+  Widget buildChecklistDisplaySection(Complaintetailservice complaint) {
     if (complaint.checklist.isEmpty) return const SizedBox();
 
     final checklist = complaint.checklist.first;
@@ -1082,7 +1167,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
-  Widget buildPartsDisplaySection(ComplaintDetail complaint) {
+  Widget buildPartsDisplaySection(Complaintetailservice complaint) {
     if (complaint.requiredParts.isEmpty) return const SizedBox();
 
     return Column(
@@ -1131,7 +1216,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
-  Widget complaintStatusSection(ComplaintDetail complaint) {
+  Widget complaintStatusSection(Complaintetailservice complaint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1255,7 +1340,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
-  Widget replacesAddedPartsSection(ComplaintDetail complaint) {
+  Widget replacesAddedPartsSection(Complaintetailservice complaint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1314,7 +1399,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
-  Widget serviceCheckListSection(ComplaintDetail complaint) {
+  Widget serviceCheckListSection(Complaintetailservice complaint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1371,7 +1456,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
         (isEngineOil || isHydraulicOil) && item.selected == "Yes";
 
     final showDateField =
-        isServiceDue && (item.selected == "Yes" || item.selected == "Due");
+        isServiceDue && (item.selected == "Yes" || item.selected == "No");
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1564,7 +1649,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                               size: 14, color: Colors.grey),
                           const SizedBox(width: 4),
                           Text(
-                            AppData.shared.formatDate(item.addedDateTime),
+                            AppData.shared.safeFormatDate(item.addedDateTime),
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey),
                           ),
@@ -1676,7 +1761,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
-  Widget statusAndDownloadRow(ComplaintDetail complaint) {
+  Widget statusAndDownloadRow(Complaintetailservice complaint) {
     final status = complaint.status;
     final hasPdf =
         complaint.pdf != null && (complaint.pdf!.pdf.trim().isNotEmpty);
@@ -1917,6 +2002,25 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
+  Widget partsTextField(int index) {
+    final item = _selectedParts[index];
+
+    return TextFormField(
+      initialValue: item['PartId'] ?? '',
+
+      decoration: InputDecoration(
+        labelText: "Enter Part Name",
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+
+      onChanged: (value) {
+        _selectedParts[index]['PartId'] = value;
+      },
+    );
+  }
+
   Widget buildPartsFormSection() {
     if (!_requiredParts) return const SizedBox();
 
@@ -1968,7 +2072,8 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                       // 🔽 PART DROPDOWN
                       Expanded(
                         flex: 4,
-                        child: partsDropdown(index),
+                        child: partsTextField(index),//partsDropdown(index),
+
                       ),
 
                       const SizedBox(width: 10),

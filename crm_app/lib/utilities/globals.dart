@@ -36,4 +36,34 @@ class AppData {
     return DateFormat('dd/MM/yyyy hh:mm a').format(dt);
   }
 
+  String safeFormatDate(String? date) {
+
+    if (date == null ||
+        date.trim().isEmpty ||
+        date == "null" ||
+        date == "0000-00-00" ||
+        date == "N/A") {
+      return "N/A";
+    }
+
+    try {
+
+      final parsed = DateTime.tryParse(date);
+
+      if (parsed == null) {
+        return "N/A";
+      }
+
+      return "${parsed.day.toString().padLeft(2, '0')}-"
+          "${parsed.month.toString().padLeft(2, '0')}-"
+          "${parsed.year}";
+
+    } catch (e) {
+
+      debugPrint("DATE ERROR => $date");
+
+      return "N/A";
+    }
+  }
+
 }
