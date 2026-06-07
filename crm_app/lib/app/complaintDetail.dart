@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crm_app/API/auth_api_service.dart';
 import 'package:crm_app/Model/complaint_details_model.dart';
@@ -12,6 +13,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/utilities/enums.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Model/check_list_model.dart';
 import '../utilities/user_local_storage.dart';
@@ -82,21 +84,21 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   bool _isChecklistExpanded = false;
 
   List<ChecklistItem> checklist = [
-    ChecklistItem(title: "Engine Starting", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Hours Meter", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Key Switch", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Emergency Ground", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Emergency Platform", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Battery & Terminal", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Horn", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Light", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Wheel Rim Nut", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Hydraulic Cylinder Leakage", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Wire Hardness", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Break Operates Properly", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "All Toggle Switch in place & works properly", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Engine Oil", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Hydraulic Oil", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Engine Starting", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Hours Meter", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Key Switch", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Emergency Ground", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Emergency Platform", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Battery & Terminal", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Horn", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Light", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Wheel Rim Nut", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Hydraulic Cylinder Leakage", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Wire Harness", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Break Operates Properly", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "All Toggle Switch in place & works properly", options: ["Ok", "No","N/Ar"]),
+    ChecklistItem(title: "Engine Oil", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Hydraulic Oil", options: ["Ok", "No","N/A"]),
     ChecklistItem(title: "Fuel Feed Pump", options: ["Ok", "No", "Electric"]),
     ChecklistItem(
       title: "Function from Basket",
@@ -106,11 +108,14 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
       title: "Function from Ground",
       options: ["OK", "Slow", "Not Working"],
     ),
-    ChecklistItem(title: "Joy Stick", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Hydraulic Pipe Leakage", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Battery Condition", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Paint Condition", options: ["Ok", "No","N/A"]),
+
+    ChecklistItem(title: "Joy Stick", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Hydraulic Pipe Leakage", options: ["Ok", "No","N/A"]),
     ChecklistItem(title: "Machine free bypass/modification", options: ["Ok", "No","Corrected"]),
-    ChecklistItem(title: "Machine maintained by Opt", options: ["Ok", "No","Not Applicable"]),
-    ChecklistItem(title: "Machine Service Due", options: ["Ok", "No","Not Applicable"]),
+    ChecklistItem(title: "Machine maintained by Opt", options: ["Ok", "No","N/A"]),
+    ChecklistItem(title: "Machine Service Due", options: ["Due", "Not Due"]),
   ];
   final _formKey = GlobalKey<FormState>();
 
@@ -130,6 +135,8 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   final _statusFocus = FocusNode();
   final _workDoneFocus = FocusNode();
   final _statusKey = GlobalKey();
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -146,6 +153,32 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
     if (expired) {
       Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+    );
+
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
     }
   }
 
@@ -437,9 +470,13 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
       "machine_free_bypass": getValue("Machine free bypass"),
       "machine_maintained_by_opt":
       getValue("Machine maintained by Opt"),
-
       "machine_service_due_status":
       getValue("Machine Service Due"),
+
+      "battery_condition":
+      getValue("Battery Condition"),
+      "paint_condition":
+      getValue("Paint Condition"),
       "machine_service_due_date": serviceDueDateController.text,
     };
   }
@@ -824,7 +861,10 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
             ]
           else
             ...[
-              sectionTitle("Update Service Report"),
+             if (complaint.status != ComplaintStatus.resolved.string)
+               ...[
+                 sectionTitle("Update Service Report"),
+               ]
             ],
             infoCard(
             children: [
@@ -838,6 +878,9 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                       infoTile(Icons.engineering, "Resolved By", complaint.assignee ?? "-"),
                     ]
                   else
+                  if (complaint.status != ComplaintStatus.resolved.string)
+                    ...[
+
                     ...[
                       Form(
                         key: _formKey,
@@ -858,7 +901,57 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                           ],
                         ),
                       ),
+                      const SizedBox(height: 20),
 
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Upload Image",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          height: 160,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade400),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: _selectedImage != null
+                              ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _selectedImage!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                              : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.image_outlined,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "Tap to select image",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
                       Center(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
@@ -883,6 +976,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                         ),
                       ),
                     ],
+                    ]
                    ]
 
               //--------------------- serviceManager ------------------------
@@ -1030,6 +1124,16 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
         case "Machine maintained by Opt":
           item.selected =
               getDisplayValue(data.machineMaintainedByOpt);
+          break;
+
+        case "Battery Condition":
+          item.selected =
+              getDisplayValue(data.batteryCondition);
+          break;
+
+        case "Paint Conditiont":
+          item.selected =
+              getDisplayValue(data.paintCondition);
           break;
 
         case "Machine Service Due":
@@ -1453,10 +1557,10 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     final isServiceDue = item.title == "Machine Service Due";
 
     final showQtyField =
-        (isEngineOil || isHydraulicOil) && item.selected == "Yes";
+        (isEngineOil || isHydraulicOil) && item.selected == "Ok";
 
     final showDateField =
-        isServiceDue && (item.selected == "Yes" || item.selected == "No");
+        isServiceDue && (item.selected == "Ok");
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),

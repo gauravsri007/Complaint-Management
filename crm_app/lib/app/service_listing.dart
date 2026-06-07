@@ -324,7 +324,7 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
       selectedItem: machine,
       items: AppData.machine_numbers,
 
-      itemAsString: (e) => e.machineNo,
+      itemAsString: (e) => e.machineDisplay,
 
       dropdownDecoratorProps: DropDownDecoratorProps(
         dropdownSearchDecoration: InputDecoration(
@@ -497,6 +497,8 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
 
   int _assignedPage = 0;
   int _unassignedPage = 0;
+  int _assignedDisplayCount = 0;
+  int _unassignedDisplayCount = 0;
 
   bool _hasMoreAssigned = true;
   bool _hasMoreUnassigned = true;
@@ -574,6 +576,21 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
     _reloadComplaints(_tabController.index == 0 ? 1 : 0);
   }
 
+  void _initializeDisplayCounts() {
+    _assignedDisplayCount =
+    AppData.assigned_complaints_count >= 10
+        ? 10
+        : AppData.assigned_complaints_count;
+
+    final total = currentUser?.role ==
+        UserRole.serviceEngineer.label
+        ? AppData.resolved_complaint_count
+        : AppData.unassigned_complaint_count;
+
+    _unassignedDisplayCount =
+    total >= 10 ? 10 : total;
+  }
+
   List<ComplaintDetail> applyFilters(List<ComplaintDetail> list) {
     return list.where((c) {
 
@@ -587,7 +604,7 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
 
       final matchesMachine =
           filterMachineNo == null ||
-              c.machineNo.trim() == filterMachineNo!.machineNo.trim();
+              c.machineNo.trim() == filterMachineNo!.machineDisplay.trim();
 
       final matchesModel =
           filterModel == null ||
@@ -673,6 +690,9 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
         AppData.assigned_complaints_count = res.assignedComplaints;
         AppData.unassigned_complaint_count = res.unassignedComplaints;
         AppData.resolved_complaint_count = res.resolvedComplaints;
+        _initializeDisplayCounts();
+
+        setState(() {});
         debugPrint('assignedComplaints: ${res.assignedComplaints}');
         debugPrint('unassignedComplaints: ${res.unassignedComplaints}');
         debugPrint('resolvedComplaints: ${res.resolvedComplaints}');
@@ -1054,13 +1074,14 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
             indicatorColor: Colors.white,
             tabs: [
               Tab(
-                text: "Assigned (${assignedComplaints.length} of ${AppData.assigned_complaints_count})",
+                text:
+                "Assigned ($_assignedDisplayCount of ${AppData.assigned_complaints_count})",
                 icon: const Icon(Icons.check_circle_outline),
               ),
               Tab(
                 text: currentUser?.role == UserRole.serviceEngineer.label
-                    ? "Resolved (${unassignedComplaints.length} of ${AppData.resolved_complaint_count})"
-                    : "Unassigned (${unassignedComplaints.length} of ${AppData.unassigned_complaint_count})",
+                    ? "Resolved ($_unassignedDisplayCount of ${AppData.resolved_complaint_count})"
+                    : "Unassigned ($_unassignedDisplayCount of ${AppData.unassigned_complaint_count})",
                 icon: const Icon(Icons.warning_amber),
               ),
             ],

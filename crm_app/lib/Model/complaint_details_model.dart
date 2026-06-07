@@ -322,6 +322,9 @@ class Checklist {
   final String machineServiceDueDate;
 
   final String createdAt;
+  final String paintCondition;
+  final String batteryCondition;
+
 
   Checklist({
     required this.id,
@@ -353,6 +356,8 @@ class Checklist {
     required this.machineServiceDueStatus,
     required this.machineServiceDueDate,
     required this.createdAt,
+    required this.paintCondition,
+    required this.batteryCondition,
   });
 
   factory Checklist.fromJson(Map<String, dynamic> json) {
@@ -393,6 +398,8 @@ class Checklist {
       machineServiceDueDate:
       json['machine_service_due_date'] ?? '',
       createdAt: json['created_at'] ?? '',
+      batteryCondition: json['battery_condition'] ?? '',
+      paintCondition: json['paint_condition'] ?? '',
     );
   }
 
@@ -427,6 +434,8 @@ class Checklist {
       "machine_service_due_status": machineServiceDueStatus,
       "machine_service_due_date": machineServiceDueDate,
       "created_at": createdAt,
+      "battery_condition": batteryCondition,
+      "paint_condition": paintCondition,
     };
   }
 }

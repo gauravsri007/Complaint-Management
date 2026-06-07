@@ -27,43 +27,41 @@ class MachineNumberResponse {
   };
 }
 
-
 class MachineNumber {
   final String id;
-  final String machineNo;
   final String machineModel;
-  final String machineSrNo;
+  final String machineDisplay;
 
   MachineNumber({
     required this.id,
-    required this.machineNo,
     required this.machineModel,
-    required this.machineSrNo,
+    required this.machineDisplay,
   });
 
-  factory MachineNumber.fromJson(Map<String, dynamic> json) {
+  factory MachineNumber.fromJson(
+      Map<String, dynamic> json,
+      ) {
     return MachineNumber(
-      id: (json['id'] ?? '').toString(),
-      machineNo: (json['machine_no'] ?? '').toString(),
-      machineModel: (json['machine_model'] ?? '').toString(),
-      machineSrNo: (json['machine_sr_no'] ?? '').toString(),
+      id: json['id']?.toString() ?? '',
+      machineModel:
+      json['machine_model']?.toString() ?? '',
+      machineDisplay:
+      json['machine_display']?.toString() ?? '',
     );
   }
 
-
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'machine_no': machineNo,
-    'machine_model': machineModel,
-    'machine_sr_no': machineSrNo,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'machine_model': machineModel,
+      'machine_display': machineDisplay,
+    };
+  }
 
   @override
   String toString() {
-    return 'MachineNumber(id: $id, machineNo: $machineNo, machineModel: $machineModel, machineSrNo: $machineSrNo)';
+    return machineDisplay.isNotEmpty
+        ? machineDisplay
+        : "N/A";
   }
-
-  // @override
-  // String toString() => machineNo;
 }

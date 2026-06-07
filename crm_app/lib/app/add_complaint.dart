@@ -254,8 +254,9 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
               (m) => MachineNumber.fromJson(m),
         );
         AppData.machine_numbers = list;
-        print("AppData.machine_numbers");
-        print(AppData.machine_numbers);
+        print("machine_numbers -> $list");
+
+        print("AppData.machine_numbers -> ${AppData.machine_numbers}");
 
         // ensure previously selected id still valid
         if (!list.any((m) => m.id == selectedMachineNumberId)) {
@@ -354,7 +355,6 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
     );
   }
 
-
   Widget _dropdownFormField<T>({
     required T? value,
     required List<DropdownMenuItem<T>> items,
@@ -378,7 +378,6 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
     padding: const EdgeInsets.symmetric(vertical: 10),
     child: Container(height: 1, color: Colors.black26),
   );
-
 
   Widget stateDropdown() {
     return _labelledRow(
@@ -544,12 +543,11 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
     );
   }
 
-
   Widget machineNumberDropdown() {
     return _labelledRow(
       label: RichText(
         text: const TextSpan(
-          text: "Machine Number",
+          text: "Serial Number",
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -574,15 +572,15 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
             ? null
             : AppData.machine_numbers.firstWhere(
               (m) => m.id == selectedMachineNumberId,
-          orElse: () => MachineNumber(id: '', machineNo: '', machineModel: '', machineSrNo: ''),
+          orElse: () => MachineNumber(id: '', machineDisplay: '', machineModel: '',),
         ),
 
         items: AppData.machine_numbers,
-        itemAsString: (m) => m.machineNo,
+        itemAsString: (m) => m.machineDisplay,
 
         dropdownDecoratorProps: DropDownDecoratorProps(
           dropdownSearchDecoration: InputDecoration(
-            labelText: "Select Machine Number",
+            labelText: "Select Serial Number",
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -591,7 +589,7 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
           showSearchBox: true,
           searchFieldProps: TextFieldProps(
             decoration: InputDecoration(
-              hintText: "Search machine number...",
+              hintText: "Search Serial number...",
               border: OutlineInputBorder(),
             ),
           ),
@@ -677,7 +675,6 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
     );
   }
 
-
   Widget statusDropdown() {
     // I assume ComplaintStatus has properties `value` (string) and `name` (label)
     final items = ComplaintStatus.values
@@ -687,7 +684,7 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
     return _labelledRow(
       label: RichText(
         text: const TextSpan(
-          text: "Machine Number",
+          text: "Serial Number",
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -716,7 +713,6 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
   }
 
   // -------------------- Build --------------------
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -994,719 +990,3 @@ class _AddComplaintPageState extends State<AddComplaintPage> {
 extension on List<CityModel> {
   toJson() {}
 }
-
-
-// import 'dart:io';                          // ✅ REQUIRED for File()
-// import 'package:crm_app/API/auth_api_service.dart';
-// import 'package:crm_app/Model/city_model.dart';
-// import 'package:crm_app/Model/machine_model.dart';
-// import 'package:crm_app/Model/machine_number_model.dart';
-// import 'package:crm_app/Model/state_model.dart';
-// import 'package:crm_app/utilities/enums.dart';
-// import 'package:crm_app/utilities/globals.dart';
-// import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart';
-//
-// class AddComplaintPage extends StatefulWidget {
-//   AddComplaintPage({super.key});
-//
-//   @override
-//   State<AddComplaintPage> createState() => _AddComplaintPageState();
-// }
-//
-// const Color kPrimaryBlue = Color(0xFF1D648B);
-//
-// class _AddComplaintPageState extends State<AddComplaintPage> {
-//   List<String> machineNumbers = [];
-//   List<String> machineModels = [];
-//   List<XFile> pickedImages = [];
-//   final ImagePicker picker = ImagePicker();
-//   final _authService = AuthApiService('https://dashboard.reachinternational.co.in/development/api');
-//
-//
-//   Future<void> pickImages() async {
-//     final List<XFile>? images = await picker.pickMultiImage();
-//
-//     if (images != null && images.isNotEmpty) {
-//       setState(() {
-//         pickedImages.addAll(images);
-//       });
-//     }
-//   }
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     fetchStatesInBackground();
-//
-//     fetchMachineNumbers();
-//
-//     // Access the list from the parent widget
-//     machineNumbers = AppData.allComplaints
-//         .map((c) => c.machineNumber)
-//         .toSet()
-//         .toList();
-//
-//     machineModels = AppData.allComplaints
-//         .map((c) => c.model)
-//         .toSet()
-//         .toList();
-//   }
-//
-//   Future<void> fetchMachineNumbers() async {
-//     print('fetchMachineNumbers enter:');
-//     try {
-//       final res = await _authService.fetchMachineNumber();
-//
-//       if (res.status == true && res.data != null) {
-//         AppData.machine_numbers = res.data.cast<MachineNumber>();
-//         // print('fetchStates : ${AppData.states}');
-//         // Navigate to)
-//         // Navigate to dashboard, save token/user, etc.
-//       } else {
-//         // Show error message res.message
-//         print('fetchMachineNumber error: ${res.message}');
-//       }
-//     } catch (e) {
-//       // Handle network/error
-//       print('fetchMachineNumber exception: $e');
-//     }
-//   }
-//
-//   Future<void> fetchMachineModels() async {
-//     print('fetchMachineModels enter:');
-//     try {
-//       // selectedMachineNumberId = getMachineIdByName(selectedMachineNumber);
-//       final res = await _authService.fetchMachineModel(machine_id: selectedMachineNumberId!);
-//
-//       if (res.status == true && res.data != null) {
-//         AppData.machine_models = res.data.cast<MachineModelData>();
-//         // print('cities : ${AppData.cities}');
-//         // Navigate to)
-//         // Navigate to dashboard, save token/user, etc.
-//         selectedCityId = getCityIdByName(selectedCity);
-//
-//       } else {
-//         // Show error message res.message
-//         print('fetchStates error: ${res.message}');
-//       }
-//     } catch (e) {
-//       // Handle network/error
-//       print('fetchStates exception: $e');
-//     }
-//   }
-//
-//   Future<void> fetchStatesInBackground() async {
-//     print('fetchStatesInBackground enter:');
-//     try {
-//       final res = await _authService.fetchStates();
-//
-//       if (res.status == true && res.data != null) {
-//         AppData.states = res.data.cast<StateModel>();
-//         // print('fetchStates : ${AppData.states}');
-//         // Navigate to)
-//         // Navigate to dashboard, save token/user, etc.
-//       } else {
-//         // Show error message res.message
-//         print('fetchStates error: ${res.message}');
-//       }
-//     } catch (e) {
-//       // Handle network/error
-//       print('fetchStates exception: $e');
-//     }
-//   }
-//
-//
-//
-//   Future<void> fetchCities() async {
-//     print('fetchCities enter:');
-//     try {
-//       selectedStateId = getStateIdByName(selectedState);
-//       final res = await _authService.fetchCities(state_id: selectedStateId!);
-//
-//       if (res.status == true && res.data != null) {
-//         AppData.cities = res.data.cast<CityModel>();
-//         // print('cities : ${AppData.cities}');
-//         // Navigate to)
-//         // Navigate to dashboard, save token/user, etc.
-//         selectedCityId = getCityIdByName(selectedCity);
-//
-//       } else {
-//         // Show error message res.message
-//         print('fetchStates error: ${res.message}');
-//       }
-//     } catch (e) {
-//       // Handle network/error
-//       print('fetchStates exception: $e');
-//     }
-//   }
-//
-//
-//   // required String complaint,
-//   // required String state,
-//   // required String city_id,
-//   // required String status,
-//
-//   Future<void> add_complaint() async {
-//     print('add_complaint enter:');
-//
-//     try {
-//       final res = await _authService.addComplaint(
-//         complaint: complaintController.text.trim(),
-//         state: selectedStateId!,
-//         city_id: selectedCityId!,
-//         status: selectedStatus!,
-//       );
-//
-//       print("complaint ${complaintController.text.trim()}");
-//       print("state $selectedStateId");
-//       print("city_id $selectedCityId");
-//       print("status $selectedStatus");
-//
-//       if (res.status == true && res.data != null) {
-//         print("response ${res.status}");
-//         /// 🎉 SHOW SUCCESS ALERT AND RETURN BACK
-//         showDialog(
-//           context: context,
-//           barrierDismissible: false, // user cannot close by tapping outside
-//           builder: (_) {
-//             return AlertDialog(
-//               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//               title: const Text("Success", style: TextStyle(fontWeight: FontWeight.bold)),
-//               content: Text(res.message),
-//               actions: [
-//                 TextButton(
-//                   onPressed: () {
-//                     Navigator.pop(context);     // close dialog
-//                     Navigator.pop(context, true); // go back (with success flag)
-//                   },
-//                   child: const Text("OK"),
-//                 ),
-//               ],
-//             );
-//           },
-//         );
-//
-//       } else {
-//         // ❌ Show error toast / alert
-//         _showError(res.message ?? "Something went wrong");
-//         print('addComplaint error: ${res.message}');
-//       }
-//
-//     } catch (e) {
-//       print('addComplaint exception: $e');
-//       _showError("Failed to submit complaint. Please try again.");
-//     }
-//   }
-//
-//
-//   void _showError(String msg) {
-//     showDialog(
-//       context: context,
-//       builder: (_) => AlertDialog(
-//         title: const Text("Error"),
-//         content: Text(msg),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text("OK"),
-//           )
-//         ],
-//       ),
-//     );
-//   }
-//
-//
-//   final TextEditingController machineNoController = TextEditingController();
-//   final TextEditingController modelController = TextEditingController();
-//   final TextEditingController complaintController = TextEditingController();
-//   final TextEditingController pendingWorkController = TextEditingController();
-//   final TextEditingController workDoneController = TextEditingController();
-//
-//   String? selectedState;
-//   String? selectedStatus;
-//   String? selectedCity;
-//   String? selectedMachineModel;
-//   String? selectedMachineNumber;
-//   String? selectedStateId;
-//   String? selectedCityId;
-//   String? selectedMachineNumberId;
-//   String? selectedMachineModelId;
-//   final stateIds = AppData.states.map((s) => s.id).toList();
-//
-//   String? getStateIdByName(String? stateName) {
-//     if (stateName == null) return null;
-//
-//     final match = AppData.states.firstWhere(
-//           (s) => s.name == stateName,
-//       orElse: () => StateModel(id: "", name: ""),
-//     );
-//
-//     return match.id.isEmpty ? null : match.id;
-//   }
-//
-//   String? getMachineIdByName(String? machineName) {
-//     if (machineName == null) return null;
-//
-//     final match = AppData.machine_numbers.firstWhere(
-//           (s) => s.machineNo == machineName,
-//       orElse: () => MachineNumber(id: "", machineNo: '', machineModel: '', machineSrNo: ''),
-//     );
-//
-//     return match.id.isEmpty ? null : match.id;
-//   }
-//
-//   String? getMachineModelIdByName(String? machineModelName) {
-//     if (machineModelName == null) return null;
-//
-//     final match = AppData.machine_models.firstWhere(
-//           (s) => s.machineModel == machineModelName,
-//       orElse: () => MachineModelData(id: "", machineSrNo: "", machineNo: "", machineModel: ""),
-//     );
-//
-//     return match.id.isEmpty ? null : match.id;
-//   }
-//
-//   String? getCityIdByName(String? city) {
-//     if (city == null) return null;
-//
-//     final match = AppData.cities.firstWhere(
-//           (s) => s.name == city,
-//       orElse: () => CityModel(id: "", name: ""),
-//     );
-//
-//     return match.id.isEmpty ? null : match.id;
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: kPrimaryBlue,
-//         title: const Text("Add Complaint", style: TextStyle(color: Colors.white)),
-//         iconTheme: const IconThemeData(color: Colors.white),
-//       ),
-//
-//       body: SingleChildScrollView(
-//         padding: const EdgeInsets.all(16),
-//
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//
-//             machineNumberDropdown(),
-//             divider(),
-//
-//             machineModelDropdown(),
-//             divider(),
-//
-//             // buildDropdown("Machine No", selectedMachineNumber, machineNumbers, (value) {
-//             //   setState(() => selectedMachineNumber = value);
-//             // }),
-//             // divider(),
-//             // buildDropdown("Machine Model", selectedMachineModel, machineModels, (value) {
-//             //   setState(() => selectedMachineModel = value);
-//             // }),
-//             divider(),
-//
-//             buildTextField("Hour meter", workDoneController,"Enter an hour value .."),
-//             divider(),
-//
-//             buildLargeInput("Complaint", complaintController,"Enter a Complaint"),
-//             divider(),
-//
-//             statusDropdown(),
-//
-//             divider(),
-//
-//             stateDropdown(),
-//
-//             divider(),
-//
-//             cityDropdown(),
-//
-//             divider(),
-//
-//             const SizedBox(height: 25),
-//
-//             Text(
-//               "Upload Image",
-//               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-//             ),
-//
-//             const SizedBox(height: 10),
-//
-//             Container(
-//               padding: const EdgeInsets.all(16),
-//               decoration: BoxDecoration(
-//                 color: Colors.white,
-//                 borderRadius: BorderRadius.circular(12),
-//                 boxShadow: [
-//                   BoxShadow(
-//                     color: Colors.black12,
-//                     blurRadius: 4,
-//                     offset: Offset(0, 2),
-//                   ),
-//                 ],
-//               ),
-//               child: Column(
-//                 children: [
-//                   // CAMERA BUTTON
-//                   SizedBox(
-//                     width: double.infinity,
-//                     child: ElevatedButton.icon(
-//                       onPressed: () async {
-//                         final XFile? image = await picker.pickImage(source: ImageSource.camera);
-//                         if (image != null) {
-//                           setState(() => pickedImages.add(image));
-//                         }
-//                       },
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: kPrimaryBlue,
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(12),
-//                         ),
-//                         padding: const EdgeInsets.symmetric(vertical: 14),
-//                       ),
-//                       icon: const Icon(Icons.photo_camera, color: Colors.white),
-//                       label: const Text("Pick from Camera",
-//                           style: TextStyle(color: Colors.white, fontSize: 16)),
-//                     ),
-//                   ),
-//
-//                   const SizedBox(height: 12),
-//
-//                   // GALLERY BUTTON
-//                   SizedBox(
-//                     width: double.infinity,
-//                     child: ElevatedButton.icon(
-//                       onPressed: () async {
-//                         final List<XFile>? images = await picker.pickMultiImage();
-//                         if (images != null && images.isNotEmpty) {
-//                           setState(() => pickedImages.addAll(images));
-//                         }
-//                       },
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: kPrimaryBlue,
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(12),
-//                         ),
-//                         padding: const EdgeInsets.symmetric(vertical: 14),
-//                       ),
-//                       icon: const Icon(Icons.photo_library, color: Colors.white),
-//                       label: const Text("Pick from Gallery",
-//                           style: TextStyle(color: Colors.white, fontSize: 16)),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//
-//             const SizedBox(height: 20),
-//
-//             pickedImages.isNotEmpty
-//                 ? SizedBox(
-//               height: 90,
-//               child: ListView.separated(
-//                 scrollDirection: Axis.horizontal,
-//                 itemCount: pickedImages.length,
-//                 separatorBuilder: (_, __) => const SizedBox(width: 10),
-//                 itemBuilder: (context, index) {
-//                   return Stack(
-//                     children: [
-//                       ClipRRect(
-//                         borderRadius: BorderRadius.circular(8),
-//                         child: Image.file(
-//                           File(pickedImages[index].path),
-//                           height: 90,
-//                           width: 90,
-//                           fit: BoxFit.cover,
-//                         ),
-//                       ),
-//                       Positioned(
-//                         right: 0,
-//                         top: 0,
-//                         child: GestureDetector(
-//                           onTap: () {
-//                             setState(() {
-//                               pickedImages.removeAt(index);
-//                             });
-//                           },
-//                           child: Container(
-//                             decoration: const BoxDecoration(
-//                               color: Colors.black54,
-//                               shape: BoxShape.circle,
-//                             ),
-//                             padding: const EdgeInsets.all(4),
-//                             child: const Icon(Icons.close, color: Colors.white, size: 16),
-//                           ),
-//                         ),
-//                       )
-//                     ],
-//                   );
-//                 },
-//               ),
-//             )
-//                 : Text("", style: TextStyle(color: Colors.grey)),
-//
-//             const SizedBox(height: 30),
-//
-//             Center(
-//               child: ElevatedButton(
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: kPrimaryBlue,
-//                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 50),
-//                 ),
-//                 onPressed: () {
-//                   add_complaint();
-//                 },
-//                 child: const Text("Submit Complaint", style: TextStyle(color: Colors.white, fontSize: 16)),
-//               ),
-//             ),
-//
-//             const SizedBox(height: 30),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//   // ============================================================
-//   //      REUSABLE WIDGETS (UNCHANGED)
-//   // ============================================================
-//
-//   Widget buildTextField(String label, TextEditingController controller,String placeholder) {
-//     return Row(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Expanded(flex: 4, child: Text(label, style: const TextStyle(color: Colors.black))),
-//         Expanded(
-//           flex: 6,
-//           child: TextField(
-//             controller: controller,
-//             style: const TextStyle(color: Colors.black),
-//             decoration: InputDecoration(
-//               hintText: placeholder,
-//               hintStyle: const TextStyle(color: Colors.black54),
-//               isDense: true,
-//               border: const UnderlineInputBorder(),
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-//
-//   Widget buildLargeInput(String label, TextEditingController controller,String placeholder) {
-//     return Row(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Expanded(flex: 4, child: Text(label, style: const TextStyle(color: Colors.black))),
-//         Expanded(
-//           flex: 6,
-//           child: TextField(
-//             controller: controller,
-//             maxLines: 3,
-//             style: const TextStyle(color: Colors.black),
-//             decoration: InputDecoration(
-//               hintText: placeholder,
-//               hintStyle: TextStyle(color: Colors.black54),
-//               border: OutlineInputBorder(),
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-//
-//   Widget statusDropdown() {
-//     final items = ComplaintStatus.values
-//         .map((c) => DropdownMenuItem<String>(
-//       value: c.value,        // unique id used as value
-//       child: Text(c.name),// shown text
-//     ))
-//         .toList();
-//
-//     // ensure selectedCityId is valid (avoid assert)
-//     final valueExists = selectedStatus == null || items.any((it) => it.value == selectedStatus);
-//
-//     return DropdownButton<String>(
-//       isExpanded: true,
-//       value: valueExists ? selectedStatus : null, // if not valid, show hint
-//       hint: const Text('Select Status'),
-//       items: items,
-//       onChanged: (v) => setState(() => selectedStatus = v
-//
-//       ),
-//     );
-//   }
-//
-//   Widget cityDropdown() {
-//     final items = AppData.cities
-//         .map((c) => DropdownMenuItem<String>(
-//       value: c.id,        // unique id used as value
-//       child: Text(c.name),// shown text
-//     ))
-//         .toList();
-//
-//     // ensure selectedCityId is valid (avoid assert)
-//     final valueExists = selectedCityId == null || items.any((it) => it.value == selectedCityId);
-//
-//     return DropdownButton<String>(
-//       isExpanded: true,
-//       value: valueExists ? selectedCityId : null, // if not valid, show hint
-//       hint: const Text('Select city'),
-//       items: items,
-//       onChanged: (v) => setState(() => selectedCityId = v
-//
-//       ),
-//     );
-//   }
-//
-//
-//
-//   String? _selectedStateId; // holds the id, not the name
-//   Widget stateDropdown() {
-//     final items = AppData.states
-//         .map((c) => DropdownMenuItem<String>(
-//       value: c.id,        // unique id used as value
-//       child: Text(c.name),// shown text
-//     ))
-//         .toList();
-//
-//     // ensure selectedCityId is valid (avoid assert)
-//     final valueExists = _selectedStateId == null || items.any((it) => it.value == _selectedStateId);
-//
-//     return DropdownButton<String>(
-//       isExpanded: true,
-//       value: valueExists ? _selectedStateId : null, // if not valid, show hint
-//       hint: const Text('Select State'),
-//       items: items,
-//       onChanged: (v) async {
-//         // update state id immediately so dropdown shows new selection
-//         setState(() => _selectedStateId = v);
-//
-//         if (v != null && v.isNotEmpty) {
-//           await fetchCities();
-//         } else {
-//           // cleared selection
-//           setState(() {
-//             AppData.cities = [];
-//             selectedCityId = null;
-//           });
-//         }
-//       },
-//
-//     );
-//   }
-//
-//   Widget machineModelDropdown() {
-//     final items = AppData.machine_models
-//         .map((c) => DropdownMenuItem<String>(
-//       value: c.id,        // unique id used as value
-//       child: Text(c.machineModel),// shown text
-//     ))
-//         .toList();
-//
-//     // ensure selectedCityId is valid (avoid assert)
-//     final valueExists = selectedMachineModel == null || items.any((it) => it.value == selectedMachineModel);
-//
-//     return DropdownButton<String>(
-//       isExpanded: true,
-//       value: valueExists ? selectedMachineModel : null, // if not valid, show hint
-//       hint: const Text('Select Machine Model'),
-//       items: items,
-//       onChanged: (v) => setState(() => selectedMachineModel = v
-//       ),
-//     );
-//   }
-//
-//   Widget machineNumberDropdown() {
-//     final items = AppData.machine_numbers
-//         .map((c) => DropdownMenuItem<String>(
-//       value: c.id,        // unique id used as value
-//       child: Text(c.machineNo),// shown text
-//     ))
-//         .toList();
-//
-//     // ensure selectedCityId is valid (avoid assert)
-//     final valueExists = selectedMachineNumberId == null || items.any((it) => it.value == selectedMachineNumberId);
-//
-//     return DropdownButton<String>(
-//       isExpanded: true,
-//       value: valueExists ? selectedMachineNumberId : null, // if not valid, show hint
-//       hint: const Text('Select Machine Number'),
-//       items: items,
-//       // onChanged: (v) => setState(() => selectedMachineNumberId = v),
-//       onChanged: (v) async {
-//         // update state id immediately so dropdown shows new selection
-//         setState(() => selectedMachineNumberId = v);
-//
-//         if (v != null && v.isNotEmpty) {
-//           await fetchMachineModels();
-//         } else {
-//           // cleared selection
-//           setState(() {
-//             AppData.machine_numbers = [];
-//             selectedMachineNumberId = null;
-//           });
-//         }
-//       },
-//     );
-//   }
-//
-//   Widget buildDropdown(
-//       String label,
-//       String? value,
-//       List<String> items,
-//       Function(String?) onChanged,
-//       ) {
-//     return Row(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Expanded(
-//           flex: 4,
-//           child: Text(
-//             label,
-//             style: const TextStyle(color: Colors.black),
-//           ),
-//         ),
-//
-//         Expanded(
-//           flex: 6,
-//           child: DropdownButtonFormField<String>(
-//             isExpanded: true, // ⭐ Prevents overflow
-//             value: value,
-//             dropdownColor: Colors.white,
-//             decoration: InputDecoration(
-//               contentPadding:
-//               const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-//               border: OutlineInputBorder(
-//                 borderRadius: BorderRadius.circular(8),
-//               ),
-//             ),
-//
-//             items: items.map((e) {
-//               return DropdownMenuItem(
-//                 value: e,
-//                 child: Text(
-//                   e,
-//                   maxLines: 1,
-//                   overflow: TextOverflow.ellipsis, // ⭐ Truncate long text
-//                 ),
-//               );
-//             }).toList(),
-//
-//             onChanged: onChanged,
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-//
-//
-//   Widget divider() => Padding(
-//     padding: const EdgeInsets.symmetric(vertical: 10),
-//     child: Container(height: 1, color: Colors.black26),
-//   );
-// }
