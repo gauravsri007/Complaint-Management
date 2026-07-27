@@ -1,10 +1,11 @@
+import 'package:crm_app/config/app_config.dart';
 import 'package:crm_app/utilities/user_local_storage.dart';
 import 'package:get/get.dart';
 import '../API/auth_api_service.dart';
 import '../Model/complaints.dart';
 
 class ComplaintController extends GetxController {
-  final AuthApiService _authService = AuthApiService('https://dashboard.reachinternational.co.in/development/api');
+  final AuthApiService _authService = AuthApiService(AppConfig.baseUrl);
 
   final isLoading = false.obs;
   ComplaintsResponse? complaintsResponse;

@@ -2,16 +2,19 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_config.dart';
+
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
   ApiClient._internal() {
     _init();
   }
-
+//https://dashboard.reachinternational.co.in/development - This is development URL
+// https://dashboard.reachinternational.co.in - This is the Live URL
   late Dio dio;
-  static const String _baseUrl =
-      'https://dashboard.reachinternational.co.in/development/api';
+  // static const String _baseUrl =
+  //     'https://dashboard.reachinternational.co.in/development/api';
   static const String _cookieKey = 'session_cookie';
   String? _sessionCookie;
 
@@ -22,7 +25,7 @@ class ApiClient {
     dio = Dio(
       BaseOptions(
 
-        baseUrl: _baseUrl,
+        baseUrl: AppConfig.baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {

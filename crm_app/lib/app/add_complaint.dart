@@ -5,6 +5,7 @@ import 'package:crm_app/Model/city_model.dart';
 import 'package:crm_app/Model/machine_model.dart';
 import 'package:crm_app/Model/machine_number_model.dart';
 import 'package:crm_app/Model/state_model.dart';
+import 'package:crm_app/config/app_config.dart';
 import 'package:crm_app/utilities/enums.dart';
 import 'package:crm_app/utilities/globals.dart';
 import 'package:crm_app/utilities/user_local_storage.dart';
@@ -25,7 +26,7 @@ const Color kPrimaryBlue = Color(0xFF1D648B);
 class _AddComplaintPageState extends State<AddComplaintPage> {
   final ImagePicker picker = ImagePicker();
   final _authService =
-  AuthApiService('https://dashboard.reachinternational.co.in/development/api');
+  AuthApiService(AppConfig.baseUrl);
 
   // UI controllers
   final TextEditingController machineNoController = TextEditingController();

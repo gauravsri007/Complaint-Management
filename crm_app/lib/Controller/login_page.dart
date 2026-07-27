@@ -1,4 +1,6 @@
 import 'package:crm_app/app/dashboard.dart';
+import 'package:crm_app/config/app_config.dart';
+import 'package:crm_app/notification_service.dart';
 import 'package:crm_app/utilities/user_local_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:crm_app/app/forgot_password.dart';
@@ -25,11 +27,15 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
 
   final _authService =
-  AuthApiService('https://dashboard.reachinternational.co.in/development/api');
+  AuthApiService(AppConfig.baseUrl);
 
   @override
   void initState() {
     super.initState();
+    print('login_page....');
+    // NotificationService notificationService = NotificationService();
+    // notificationService.requestNotificationPermission();
+    // notificationService.getFcmToken();
     loadSavedCredentials();
   }
 

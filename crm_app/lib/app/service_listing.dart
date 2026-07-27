@@ -6,6 +6,7 @@ import 'package:crm_app/Model/complaint_details_model.dart';
 import 'package:crm_app/Model/complaints.dart';
 import 'package:crm_app/Model/login_models.dart';
 import 'package:crm_app/Model/machine_number_model.dart';
+import 'package:crm_app/config/app_config.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,7 @@ class ComplaintFilterSheet extends StatefulWidget {
   final DateTime? initialEndDate;
   final MachineNumber? initialMachineNo;
   final MachineModelData? initialModel;
+  final UserData? currentUser;
 
   const ComplaintFilterSheet({
     super.key,
@@ -41,6 +43,7 @@ class ComplaintFilterSheet extends StatefulWidget {
     this.initialEndDate,
     this.initialMachineNo,
     this.initialModel,
+    this.currentUser,
   });
 //
   @override
@@ -65,8 +68,9 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
   bool _isMachineModelsLoading = false;
   final Map<String, List<MachineModelData>> _machineModelCache = {};
   final _authService = AuthApiService(
-    'https://dashboard.reachinternational.co.in/development/api',
+    AppConfig.baseUrl,
   );
+  UserData? currentUser;
 
   @override
   void initState() {
@@ -77,7 +81,7 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
     endDate = widget.initialEndDate;
     machine = widget.initialMachineNo;
     machine_model = widget.initialModel;
-
+    currentUser = widget.currentUser;
     // Access the list from the parent widget
   }
 
@@ -235,17 +239,21 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
                         "engineer": engineer,
                         "status": status,
                         "startDate": startDate,
-                        "endDate": endDate,
-                        "machineNo": selectedMachineNumberId == null
-                            ? null
-                            : AppData.machine_numbers.firstWhere(
+                        "endDate": endDate,"machineNo": AppData.machine_numbers.any(
                               (m) => m.id == selectedMachineNumberId,
-                        ),
-                        "model": selectedMachineModelId == null
-                            ? null
-                            : AppData.machine_models.firstWhere(
+                        )
+                            ? AppData.machine_numbers.firstWhere(
+                              (m) => m.id == selectedMachineNumberId,
+                        )
+                            : null,
+
+                        "model": AppData.machine_models.any(
                               (m) => m.id == selectedMachineModelId,
-                        ),
+                        )
+                            ? AppData.machine_models.firstWhere(
+                              (m) => m.id == selectedMachineModelId,
+                        )
+                            : null,
                       });
                     },
                     child: const Text("Reset"),
@@ -287,11 +295,50 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
     );
   }
 
-  Widget engineerDropDown(){
+  Widget engineerDropDown() {
+    final isServiceEngineer =
+        widget.currentUser?.role == UserRole.serviceEngineer.label;
+
+    // Service Engineer View
+    if (isServiceEngineer) {
+      Employee? selectedEngineer;
+
+      try {
+        selectedEngineer = widget.engineers.firstWhere(
+              (e) => e.userId == currentUser?.userId,
+        );
+
+        engineer = selectedEngineer;
+      } catch (_) {
+        selectedEngineer = Employee(
+          userId: currentUser?.userId ?? '',
+          name: currentUser?.name ?? '',
+          role: '',
+          roleId: '',
+          email: '',
+        );
+      }
+
+      return DropdownSearch<Employee>(
+        selectedItem: selectedEngineer,
+        enabled: false,
+        items: [selectedEngineer],
+        itemAsString: (e) => e.name,
+        dropdownDecoratorProps: DropDownDecoratorProps(
+          dropdownSearchDecoration: InputDecoration(
+            labelText: "Service Engineer",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Admin / Service Manager View
     return DropdownSearch<Employee>(
       selectedItem: engineer,
       items: AppData.employee_list,
-
       itemAsString: (e) => e.name,
 
       dropdownDecoratorProps: DropDownDecoratorProps(
@@ -305,9 +352,11 @@ class _ComplaintFilterSheetState extends State<ComplaintFilterSheet> {
 
       popupProps: PopupProps.menu(
         showSearchBox: true,
-        fit: FlexFit.loose, // 🔥 IMPORTANT FIX
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.5, // 👈 LIMIT HEIGHT
+        searchFieldProps: const TextFieldProps(
+          decoration: InputDecoration(
+            hintText: "Search Engineer",
+            border: OutlineInputBorder(),
+          ),
         ),
       ),
 
@@ -479,7 +528,7 @@ class ComplaintListingPage extends StatefulWidget {
 class _ComplaintListingPageState extends State<ComplaintListingPage>
     with SingleTickerProviderStateMixin {
   final _authService = AuthApiService(
-    'https://dashboard.reachinternational.co.in/development/api',
+    AppConfig.baseUrl,
   );
 
   // final ScrollController _scrollController = ScrollController();
@@ -488,9 +537,7 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
   List<MachineNumber> machineNumbers = [];
   List<MachineModelData> machineModels = [];
   List<Employee> serviceEngineers = [];
-
   String? selectedMachineNumberId;
-
   late TabController _tabController;
   List<ComplaintDetail> assignedList = [];
   List<ComplaintDetail> unassignedList = [];
@@ -543,6 +590,7 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
         initialEndDate: filterEndDate,
         initialMachineNo: filterMachineNo,
         initialModel: filterModel,
+        currentUser: currentUser,
       ),
     );
     if (result != null) {
@@ -650,6 +698,10 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
 
     _tabController = TabController(length: 2, vsync: this);
 
+    _initData();
+
+    checkSession(context);
+
     getComplaintCount();
 
     _tabController.addListener(() {
@@ -675,8 +727,6 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
       currentUser?.role == UserRole.serviceEngineer.label?_handleScroll(_unassignedController, 2):_handleScroll(_unassignedController, 0); // type 0 = Unassigned/Solved
     });
 
-    _initData();
-    checkSession(context);
   }
 
   Future<void> getComplaintCount() async {
@@ -752,10 +802,40 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
+
   Future<void> _initData() async {
     currentUser = await UserLocalStorage.getSavedUser();
+    await getComplaintCount();
+
     await _reloadComplaints(1);
-    fetchMachineNumbers();
+
+    await fetchMachineNumbers();
+
+    // if (AppData.employee_list.isNotEmpty) {
+    //   try {
+    //     filterEngineer = AppData.employee_list.firstWhere(
+    //           (e) => e.userId == currentUser!.userId,
+    //     );
+    //   } catch (_) {
+    //     filterEngineer = Employee(
+    //       userId: currentUser!.userId,
+    //       name: currentUser!.name ?? '',
+    //       role: '',
+    //       roleId: '',
+    //       email: '',
+    //     );
+    //   }
+    // }
+
+    if (currentUser?.role == UserRole.serviceEngineer.label) {
+      filterEngineer = Employee(
+        userId: currentUser!.userId,
+        name: currentUser!.name ?? '',
+        role: '',
+        roleId: '',
+        email: '',
+      );
+    }
   }
 
   /// 🔹 Reload from page 1
@@ -881,14 +961,14 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
           if (isAssigned) {
             assignedList.addAll(newData);
             _assignedPage = page;
-
+            _assignedDisplayCount = assignedList.length;
             if (newData.isEmpty) {
               _hasMoreAssigned = false;
             }
           } else {
             unassignedList.addAll(newData);
             _unassignedPage = page;
-
+            _unassignedDisplayCount = unassignedList.length;
             if (newData.isEmpty) {
               _hasMoreUnassigned = false;
             }
@@ -932,7 +1012,10 @@ class _ComplaintListingPageState extends State<ComplaintListingPage>
             ? "${filterEndDate!.year}-${filterEndDate!.month}-${filterEndDate!.day}"
             : "",
         status: filterStatus ?? "",
-        userid: filterEngineer?.userId ?? "",
+        userid: currentUser?.role ==
+            UserRole.serviceEngineer.label
+            ? currentUser!.userId
+            : filterEngineer?.userId ?? "",
         machine_id: filterMachineNo?.id ?? "",
         keyword: "",
       );

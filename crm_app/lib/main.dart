@@ -1,14 +1,35 @@
 import 'package:crm_app/Controller/login_page.dart';
 import 'package:crm_app/utilities/user_local_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+// core Flutter primitives
+import 'package:flutter/foundation.dart';
+// core FlutterFire dependency
+import 'config/app_config.dart';
 // Define the custom colors based on the logo
 const Color kPrimaryBlue = Color(0xFF1D648B); // The blue from the logo
 const Color kDarkText = Color(0xFF333333); // The dark grey from the logo
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  AppConfig.setEnvironment(Environment.development);
+
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions.currentPlatform, // ✅ this should be there
+  // );
   runApp(const MyApp());
+}
+
+class FirebaseApi {
+final _firebaseMessaging = FirebaseMessaging.instance;
+Future<void> initNotifications() async {
+  await _firebaseMessaging.requestPermission();
+  final fcmToken = await _firebaseMessaging.getToken();
+  print('FCM Token: $fcmToken');
+}
 }
 
 class MyApp extends StatelessWidget {

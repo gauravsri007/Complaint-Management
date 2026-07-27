@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "256711733933",
+    "project_id": "ri-mobile-app-39d57",
+    "storage_bucket": "ri-mobile-app-39d57.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256711733933:android:5a06cdd4cf68f2b4958c24",
+        "android_client_info": {
+          "package_name": "com.reachinternational.riapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_3x4GeqZDEa674qlJl40Nhjdytm9MTJ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

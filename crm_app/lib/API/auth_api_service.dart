@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:crm_app/Model/add_complaint_model.dart';
 import 'package:crm_app/Model/city_model.dart';
 import 'package:crm_app/Model/complaint_assign_model.dart';
@@ -12,11 +13,14 @@ import 'package:crm_app/Model/get_parts_model.dart';
 import 'package:crm_app/Model/machine_model.dart';
 import 'package:crm_app/Model/machine_number_model.dart';
 import 'package:crm_app/Model/state_model.dart';
+import 'package:crm_app/config/app_config.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Model/complaint_count_model.dart';
 import '../Model/login_models.dart';
+import 'package:http_parser/http_parser.dart';   // ← for MediaType
+
 
 class AuthApiService {
   late Dio dio;
@@ -46,8 +50,8 @@ class AuthApiService {
 
     late final Dio _dio = Dio(
       BaseOptions(
-        baseUrl:
-        'https://dashboard.reachinternational.co.in/development/api',
+        baseUrl:AppConfig.baseUrl,
+       // 'https://dashboard.reachinternational.co.in/development/api',
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -81,8 +85,10 @@ class AuthApiService {
             validateStatus: (_) => true, // allow 200/400/500 printing
           ),
         );
-        print("STATUS: ${response.statusCode}");
-        print("RAW: ${response.data}");
+        print("STATUS....: ${response.statusCode}");
+        print("RAW....: ${response.data}");
+        print("Url....: ${AppConfig.baseUrl}");
+
         // Convert bytes (gzip/deflate/br) → text
         final raw = response.data.toString().trim();
 
@@ -837,6 +843,7 @@ class AuthApiService {
     required bool hasRquiredParts,
     required List<Map<String, dynamic>> parts,
     required Map<String, dynamic> mapdata,
+    File? image,                            // ← ADD THIS (nullable)
   }) async {
     debugPrint("updateComplaint -> checklist: $mapdata");
 
@@ -844,7 +851,7 @@ class AuthApiService {
     String token = prefs.getString('token') ?? '';
 
     try {
-      // ✅ BASE MAP
+      // ── Base fields ──────────────────────────────────────────────
       Map<String, dynamic> map = {
         "id": id,
         "work_done": work_done,
@@ -852,37 +859,55 @@ class AuthApiService {
         "pending_work": pending_work,
         "employee_id": employee_id,
         "has_required_parts": hasRquiredParts ? 1 : 0,
-
-        // 🔥 IMPORTANT
         "has_required_checklist": 1,
       };
 
-      // ✅ ADD PARTS
+      // ── Parts ────────────────────────────────────────────────────
       for (int i = 0; i < parts.length; i++) {
-        map["parts[$i][PartId]"] = parts[i]["PartId"];
+        map["parts[$i][PartId]"]   = parts[i]["PartId"];
         map["parts[$i][Quantity]"] = parts[i]["Quantity"];
+        map["parts[$i][Status]"] = parts[i]["Status"];
       }
 
-      // ✅ ADD CHECKLIST (IMPORTANT FIX)
+      // ── Checklist ────────────────────────────────────────────────
       mapdata.forEach((key, value) {
         if (value != null && value.toString().isNotEmpty) {
           map[key] = value.toString().trim();
         }
       });
 
-      // ✅ CREATE FORMDATA
+      // ── Build FormData ───────────────────────────────────────────
       final formData = FormData();
 
+      // Add all text fields
       map.forEach((key, value) {
         formData.fields.add(MapEntry(key, value.toString()));
       });
 
-      // 🔍 DEBUG PRINT (VERY IMPORTANT)
-      print("--------- FINAL REQUEST ---------");
-      formData.fields.forEach((field) {
-        print("${field.key}: ${field.value}");
-      });
+      // ── Add image if selected ────────────────────────────────────
+      if (image != null) {
+        final fileName = image.path.split('/').last;
+        formData.files.add(
+          MapEntry(
+            'complaintImage',                       // ← API key
+            await MultipartFile.fromFile(
+              image.path,
+              filename: fileName,
+              contentType: MediaType('image', fileName.split('.').last),
+            ),
+          ),
+        );
+        debugPrint("updateComplaint -> image attached: $fileName");
+      } else {
+        debugPrint("updateComplaint -> no image selected");
+      }
 
+      // ── Debug print ──────────────────────────────────────────────
+      print("--------- FINAL REQUEST ---------");
+      formData.fields.forEach((f) => print("${f.key}: ${f.value}"));
+      formData.files.forEach((f) => print("FILE -> ${f.key}: ${f.value.filename}"));
+
+      // ── POST request ─────────────────────────────────────────────
       final response = await _dio.post(
         '/update_complaint',
         data: formData,
@@ -898,7 +923,6 @@ class AuthApiService {
       );
 
       final raw = response.data.toString().trim();
-
       if (raw.isEmpty) throw Exception("Empty response");
 
       final start = raw.indexOf('{');
@@ -908,6 +932,7 @@ class AuthApiService {
       final Map<String, dynamic> jsonMap = jsonDecode(jsonBody);
 
       return SimpleResponse.fromJson(jsonMap);
+
     } catch (e) {
       debugPrint("updateComplaint exception: $e");
       rethrow;

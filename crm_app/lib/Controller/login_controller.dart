@@ -1,10 +1,11 @@
+import 'package:crm_app/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../API/auth_api_service.dart';
 import '../Model/login_models.dart';
 
 class LoginController extends GetxController {
-  final AuthApiService _authService = AuthApiService('https://dashboard.reachinternational.co.in/development/api');
+  final AuthApiService _authService = AuthApiService(AppConfig.baseUrl);
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();

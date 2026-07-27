@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crm_app/API/auth_api_service.dart';
 import 'package:crm_app/Model/common_model.dart';
+import 'package:crm_app/config/app_config.dart';
 import 'package:crm_app/utilities/enums.dart';
 import 'package:crm_app/utilities/globals.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,7 @@ class _DashboardPageState extends State<DashboardPage> {
   UserRole? userRole;
   bool _isLogoutLoading = false;
   final _authService =
-  AuthApiService('https://dashboard.reachinternational.co.in/development/api');
+  AuthApiService(AppConfig.baseUrl);
   bool _isMachineModelsLoading = false;
   bool _isEmployeeLoading = false;
 

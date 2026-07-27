@@ -7,6 +7,7 @@ import 'package:crm_app/Model/complaint_history_model.dart';
 import 'package:crm_app/Model/employee_list_model.dart';
 import 'package:crm_app/Model/get_parts_model.dart';
 import 'package:crm_app/Model/login_models.dart';
+import 'package:crm_app/config/app_config.dart';
 import 'package:crm_app/utilities/globals.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -73,6 +74,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   // Dynamic list of selected parts (each entry: {'part': String, 'qty': int})
   final List<Map<String, dynamic>> _selectedParts = [
     {
+      'Status': 'Required',
       'PartId': null,
       'Quantity': 1,
     }
@@ -83,40 +85,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   bool _isServiceCheckList = true; // NEW
   bool _isChecklistExpanded = false;
 
-  List<ChecklistItem> checklist = [
-    ChecklistItem(title: "Engine Starting", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Hours Meter", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Key Switch", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Emergency Ground", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Emergency Platform", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Battery & Terminal", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Horn", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Light", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Wheel Rim Nut", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Hydraulic Cylinder Leakage", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Wire Harness", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Break Operates Properly", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "All Toggle Switch in place & works properly", options: ["Ok", "No","N/Ar"]),
-    ChecklistItem(title: "Engine Oil", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Hydraulic Oil", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Fuel Feed Pump", options: ["Ok", "No", "Electric"]),
-    ChecklistItem(
-      title: "Function from Basket",
-      options: ["OK", "Slow", "Not Working"],
-    ),
-    ChecklistItem(
-      title: "Function from Ground",
-      options: ["OK", "Slow", "Not Working"],
-    ),
-    ChecklistItem(title: "Battery Condition", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Paint Condition", options: ["Ok", "No","N/A"]),
 
-    ChecklistItem(title: "Joy Stick", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Hydraulic Pipe Leakage", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Machine free bypass/modification", options: ["Ok", "No","Corrected"]),
-    ChecklistItem(title: "Machine maintained by Opt", options: ["Ok", "No","N/A"]),
-    ChecklistItem(title: "Machine Service Due", options: ["Due", "Not Due"]),
-  ];
   final _formKey = GlobalKey<FormState>();
 
   bool _isComplaintExpanded = true; // NEW
@@ -131,12 +100,106 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   bool _isPartsExpanded = false;
   bool _showPartsForm = false;
   final _authService =
-  AuthApiService('https://dashboard.reachinternational.co.in/development/api');
+  AuthApiService(AppConfig.baseUrl);
   final _statusFocus = FocusNode();
   final _workDoneFocus = FocusNode();
   final _statusKey = GlobalKey();
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
+  List<ChecklistItem> checklist = [
+    ChecklistItem(title: "Engine Starting", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Hours Meter", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Key Switch", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Emergency Ground", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Emergency Platform", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Battery & Terminal", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Horn", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Light", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Wheel Rim Nut", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Hydraulic Cylinder Leakage", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Wire Harness", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Break Operates Properly", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "All Toggle Switch in place & works properly", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Engine Oil", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Hydraulic Oil", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Fuel Feed Pump", options: ["Ok", "No", "Electric"]),
+    ChecklistItem(
+      title: "Function from Basket",
+      options: ["Ok", "Slow", "Not Working"],
+    ),
+    ChecklistItem(
+      title: "Function from Ground",
+      options: ["Ok", "Slow", "Not Working"],
+    ),
+    ChecklistItem(title: "Battery Condition", options: ["Ok", "Not Ok"]),
+    ChecklistItem(title: "Paint Condition", options: ["Good", "Average","Poor"]),
+    ChecklistItem(title: "Joy Stick", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Hydraulic Pipe Leakage", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Machine free bypass/modification", options: ["Ok", "No","Corrected"]),
+    ChecklistItem(title: "Machine maintained by Opt", options: ["Ok", "No","NA"]),
+    ChecklistItem(title: "Machine Service Due", options: ["Due", "Not Due"]),
+  ];
+
+  Map<String, dynamic> getChecklistPayload() {
+    return {
+      "engine_starting": getValue("Engine Starting"),
+      "hour_meter": getValue("Hours Meter"),
+      "key_switch": getValue("Key Switch"),
+      "emergency_ground": getValue("Emergency Ground"),
+      "emergency_platform": getValue("Emergency Platform"),
+      "battery_terminal": getValue("Battery & Terminal"),
+      "horn": getValue("Horn"),
+      "light": getValue("Light"),
+      "wheel_rim_nut": getValue("Wheel Rim Nut"),
+      "hydraulic_cylinder_leakage":
+      getValue("Hydraulic Cylinder Leakage"),
+      "wire_harness": getValue("Wire Harness"),
+      "brake_operate_normally":
+      getValue("Break Operates Properly"),
+      "toggles_switch_normal":
+      getValue("All Toggle Switch in place & works properly"),
+
+      "engine_oil_status": getValue("Engine Oil"),
+      "engine_oil_qty": engineOilQtyController.text,
+
+      "hydraulic_oil_status": getValue("Hydraulic Oil"),
+      "hydraulic_oil_qty": hydraulicOilQtyController.text,
+
+      "fuel_feed_pump": getValue("Fuel Feed Pump"),
+
+      "function_from_basket": getValue("Function from Basket"),
+      "function_from_ground": getValue("Function from Ground"),
+
+      "joy_stick": getValue("Joy Stick"),
+      "hydraulic_pipe_leakage":
+      getValue("Hydraulic Pipe Leakage"),
+
+      "machine_free_bypass": getValue("Machine free bypass"),
+      "machine_maintained_by_opt":
+      getValue("Machine maintained by Opt"),
+      "machine_service_due_status":
+      getValue("Machine Service Due"),
+
+      "battery_condition":
+      getValue("Battery Condition"),
+      "paint_condition":
+      getValue("Paint Condition"),
+      "machine_service_due_date": serviceDueDateController.text,
+    };
+  }
+
+  String getValue(String title) {
+    final item = checklist.firstWhere(
+          (e) => e.title == title,
+      orElse: () => ChecklistItem(title: title, options: []),
+    );
+
+    if (item.selected == null) return "";
+    if (item.selected == "Yes") return "Yes";
+    if (item.selected == "No") return "No";
+    if (item.selected == "NA") return "NA";
+    return item.selected!; // OK, Slow, Not Working, Electric etc.
+  }
 
   @override
   void initState() {
@@ -157,55 +220,107 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Camera'),
+            onTap: () async {
+              Navigator.pop(context);
+              final picked = await ImagePicker().pickImage(
+                  source: ImageSource.camera, imageQuality: 80);
+              if (picked != null) setState(() => _selectedImage = File(picked.path));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Gallery'),
+            onTap: () async {
+              Navigator.pop(context);
+              final picked = await ImagePicker().pickImage(
+                  source: ImageSource.gallery, imageQuality: 80);
+              if (picked != null) setState(() => _selectedImage = File(picked.path));
+            },
+          ),
+        ]),
+      ),
     );
-
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-      });
-    }
   }
 
-  Future<void> _pickFromCamera() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 80,
-    );
+  // Future<void> _pickFromCamera() async {
+  //   final XFile? image = await _picker.pickImage(
+  //     source: ImageSource.camera,
+  //     imageQuality: 80,
+  //   );
+  //
+  //   if (image != null) {
+  //     setState(() {
+  //       _selectedImage = File(image.path);
+  //     });
+  //   }
+  // }
 
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-      });
-    }
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("Camera"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text("Gallery"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _initData() async {
     complaintHistoryList = [];
     currentUser = await UserLocalStorage.getSavedUser();
 
-    // print("currentUser?.role ************************* ${currentUser?.role == UserRole.serviceEngineer.label}");
-    // print('complaint!.status ************************* ${complaint!.status}');
-    // print('currentUser?.role ************************* ${currentUser?.role}');
+
+
+    tabController = TabController(length: 2, vsync: this);
+
+     await getComplaintDetails();
+     await getComplaintHistory();
+     await getEmployeeList();
+     await getPartsList();
+
+    print("currentUser?.role ************************* ${currentUser?.role == UserRole.serviceEngineer.label}");
+    print('complaint!.status ************************* ${complaint!.status == ComplaintStatus.open.string}');
+    print('complaint!.status ************************* ${complaint!.status}');
     if (complaint!.status == ComplaintStatus.open.string && currentUser?.role == UserRole.serviceEngineer.label) {
-      complaintAcknowledge();
+      await complaintAcknowledge();
     } else {
       complaint.status = complaint.status;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.onAcknowledge();
       });
     }
-
-    tabController = TabController(length: 2, vsync: this);
-
-    Future.wait([
-      getComplaintDetails(),
-      getComplaintHistory(),
-      getEmployeeList(),
-      getPartsList(),
-    ]);
   }
 
   String? getUserIdFromUserName(
@@ -226,14 +341,16 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
 
   Future<void> complaintAcknowledge() async {
-    debugPrint('complaintAcknowledge called ...');
-
     final user = await UserLocalStorage.getSavedUser();
+
+    debugPrint('complaintAcknowledge called complaintId...${complaint!.complaintId!}');
+    debugPrint('complaintAcknowledge called assigned_to...${user!.userId!}');
+
     setState(() => _isAcknowledgeLoading = true);
     try {
       final res = await _authService.complaintAcknowledge(
           complaint_id: complaint!.complaintId!,
-          assigned_to:  complaint.assigned_to
+          assigned_to:  user!.userId!
       );
       if (res.status == true) {
         debugPrint("Message -----------------------> ${res.message}");
@@ -319,6 +436,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
   Future<void> getComplaintHistory() async {
     final user = await UserLocalStorage.getSavedUser();
+    debugPrint('getComplaintHistory: - > ${complaint.machineModel}');
 
     setState(() => _isComplaintHistoryLoading = true);
     try {
@@ -400,6 +518,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
         hasRquiredParts: _requiredParts,
         parts: _selectedParts,
         mapdata: mapdata,
+        image: _selectedImage,          // ← ADD THIS
       );
       if (res.status == true) {
         // ✅ SUCCESS ALERT
@@ -418,7 +537,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                   Navigator.pop(context); // close dialog
                   Navigator.pop(context, true); // go back if needed
                 },
-                child: const Text('OK'),
+                child: const Text('Ok'),
               ),
             ],
           ),
@@ -433,69 +552,10 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     }
   }
 
-  Map<String, dynamic> getChecklistPayload() {
-    return {
-      "engine_starting": getValue("Engine Starting"),
-      "hour_meter": getValue("Hours Meter"),
-      "key_switch": getValue("Key Switch"),
-      "emergency_ground": getValue("Emergency Ground"),
-      "emergency_platform": getValue("Emergency Platform"),
-      "battery_terminal": getValue("Battery & Terminal"),
-      "horn": getValue("Horn"),
-      "light": getValue("Light"),
-      "wheel_rim_nut": getValue("Wheel Rim Nut"),
-      "hydraulic_cylinder_leakage":
-      getValue("Hydraulic Cylinder Leakage"),
-      "wire_hardness": getValue("Wire Hardness"),
-      "brake_operate_normally":
-      getValue("Break Operates Properly"),
-      "toggles_switch_normal":
-      getValue("All Toggle Switch"),
-
-      "engine_oil_status": getValue("Engine Oil"),
-      "engine_oil_qty": engineOilQtyController.text,
-
-      "hydraulic_oil_status": getValue("Hydraulic Oil"),
-      "hydraulic_oil_qty": hydraulicOilQtyController.text,
-
-      "fuel_feed_pump": getValue("Fuel Feed Pump"),
-
-      "function_from_basket": getValue("Function from Basket"),
-      "function_from_ground": getValue("Function from Ground"),
-
-      "joy_stick": getValue("Joy Stick"),
-      "hydraulic_pipe_leakage":
-      getValue("Hydraulic Pipe Leakage"),
-
-      "machine_free_bypass": getValue("Machine free bypass"),
-      "machine_maintained_by_opt":
-      getValue("Machine maintained by Opt"),
-      "machine_service_due_status":
-      getValue("Machine Service Due"),
-
-      "battery_condition":
-      getValue("Battery Condition"),
-      "paint_condition":
-      getValue("Paint Condition"),
-      "machine_service_due_date": serviceDueDateController.text,
-    };
-  }
-
-  String getValue(String title) {
-    final item = checklist.firstWhere(
-          (e) => e.title == title,
-      orElse: () => ChecklistItem(title: title, options: []),
-    );
-
-    if (item.selected == null) return "";
-    if (item.selected == "Yes") return "Y";
-    if (item.selected == "No") return "N";
-    return item.selected!; // OK, Slow, Not Working, Electric etc.
-  }
-
   void _addPartRow() {
     setState(() {
       _selectedParts.add({
+        'Status': 'Required',
         'PartId': null,
         'Quantity': 1,
       });
@@ -679,6 +739,11 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                 color: Colors.grey.shade300,
               ),
               const SizedBox(height: 10),
+              infoTile(
+                Icons.calendar_today,
+                "Complaint Created By",
+                naIfEmpty("${complaint?.createdBy}"),
+              ),
 
               infoTile(
                 Icons.calendar_today,
@@ -707,7 +772,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
               infoTile(
                 Icons.precision_manufacturing,
                 "Model",
-                naIfEmpty(complaint?.machine),
+                naIfEmpty(complaint?.machineModel),
               ),
 
               infoTile(
@@ -749,11 +814,6 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                 "Site Contact Person Name",
                 naIfEmpty(complaint.contact_person_name),
               ),
-              // infoTile(
-              //   Icons.error_outline,
-              //   "Site Contact Person No",
-              //   naIfEmpty(complaint.contact_person_number),
-              // ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -838,7 +898,54 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                 ),
               ),
 
+
               const SizedBox(height: 8),
+
+              if (complaint.images != null &&
+                  complaint.images!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.image,
+                        size: 22,
+                        color: AppData.primaryBlue,
+                      ),
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Image",
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                              ),
+                            ),
+
+                            GestureDetector(
+                              onTap: () => _downloadImage(
+                                complaint.images.first!,
+                              ),
+                              child: Text(
+                                "Download Service Image",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const Divider(),
 
               if (complaint.requiredParts.isNotEmpty) ...[
@@ -853,7 +960,6 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
 
             ],
           ),
-
 
             if (currentUser?.role != UserRole.serviceEngineer.label)
             ...[
@@ -917,7 +1023,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
                       const SizedBox(height: 10),
 
                       GestureDetector(
-                        onTap: _pickImage,
+                        onTap: _showImagePickerOptions,
                         child: Container(
                           height: 160,
                           width: double.infinity,
@@ -1015,6 +1121,26 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
+  Future<void> _downloadImage(String imageUrl) async {
+    try {
+      final fileName =
+          "site_contact_${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+      final filePath =
+          "/storage/emulated/0/Download/$fileName";
+
+      await Dio().download(
+        imageUrl,
+        filePath,
+      );
+
+      _showMessage("Image downloaded to Downloads");
+    } catch (e) {
+      debugPrint("Download image error: $e");
+      _showMessage("Failed to download image");
+    }
+  }
+
   void _scrollToFirstError() {
     final context = _statusKey.currentContext;
     if (context != null) {
@@ -1070,7 +1196,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
               getDisplayValue(data.hydraulicCylinderLeakage);
           break;
 
-        case "Wire Hardness":
+        case "Wire Harness":
           item.selected = getDisplayValue(data.wireHardness);
           break;
 
@@ -1131,7 +1257,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
               getDisplayValue(data.batteryCondition);
           break;
 
-        case "Paint Conditiont":
+        case "Paint Condition":
           item.selected =
               getDisplayValue(data.paintCondition);
           break;
@@ -1212,10 +1338,10 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
           _row("Wheel Rim Nut", yesNo(checklist.wheelRimNut)),
           _row("Hydraulic Cylinder Leakage",
               yesNo(checklist.hydraulicCylinderLeakage)),
-          _row("Wire Hardness", yesNo(checklist.wireHardness)),
+          _row("Wire Harness", yesNo(checklist.wireHardness)),
           _row("Brake Operate Normally",
               yesNo(checklist.brakeOperateNormally)),
-          _row("Toggle Switch Normal",
+          _row("All Toggle Switch in place & works properly",
               yesNo(checklist.togglesSwitchNormal)),
 
           const Divider(),
@@ -1247,6 +1373,32 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
     );
   }
 
+  Widget partTypeDropdown(int index) {
+    return DropdownButtonFormField<String>(
+      value: _selectedParts[index]['Status'],
+      decoration: const InputDecoration(
+        labelText: 'Type',
+        isDense: true,
+        border: OutlineInputBorder(),
+      ),
+      items: const [
+        DropdownMenuItem(
+          value: 'Required',
+          child: Text('Required'),
+        ),
+        DropdownMenuItem(
+          value: 'Replaced',
+          child: Text('Replaced'),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _selectedParts[index]['Status'] = value;
+        });
+      },
+    );
+  }
+
   Widget _row(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1262,7 +1414,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
           Expanded(
             flex: 2,
             child: Text(
-              value.isEmpty ? "N/A" : value,
+              value.isEmpty ? "NA" : value,
               textAlign: TextAlign.end, // 👈 RIGHT ALIGN
             ),
           ),
@@ -1560,7 +1712,7 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
         (isEngineOil || isHydraulicOil) && item.selected == "Ok";
 
     final showDateField =
-        isServiceDue && (item.selected == "Ok");
+        isServiceDue && (item.selected == "Due");
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -2167,50 +2319,77 @@ class _ComplaintDetailPageState extends State<ComplaintDetailPage>
             itemBuilder: (context, index) {
               final item = _selectedParts[index];
 
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Row(
-                    children: [
-                      // 🔽 PART DROPDOWN
-                      Expanded(
-                        flex: 4,
-                        child: partsTextField(index),//partsDropdown(index),
+              return // ✅ AFTER — Part + Delete on row 1, Qty + Type on row 2
+                Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(                          // ← Column instead of Row
+                      children: [
 
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      // 🔽 QUANTITY
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          initialValue:
-                          (item['Quantity'] as int).toString(),
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Qty',
-                            isDense: true,
-                          ),
-                          onChanged: (val) {
-                            final q = int.tryParse(val) ?? 1;
-                            item['Quantity'] = q;
-                          },
+                        // ── Row 1: Part Name + Delete button ──
+                        Row(
+                          children: [
+                            Expanded(
+                              child: partsTextField(index), // Enter Part Name
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () => _removePartRow(index),
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                            ),
+                          ],
                         ),
-                      ),
 
-                      const SizedBox(width: 8),
+                        const SizedBox(height: 8),
 
-                      // 🔽 DELETE BUTTON
-                      IconButton(
-                        onPressed: () => _removePartRow(index),
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                      ),
-                    ],
+                        // ── Row 2: Qty + Type ──
+                        Row(
+                          children: [
+                            // Qty
+                            Expanded(
+                              flex: 1,
+                              child: TextFormField(
+                                initialValue: (item['Quantity'] as int).toString(),
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Qty',
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                ),
+                                onChanged: (val) {
+                                  final q = int.tryParse(val) ?? 1;
+                                  item['Quantity'] = q;
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(width: 10),
+
+                            // Type (was overflowing)
+                            Expanded(
+                              flex: 2,
+                              child: DropdownButtonFormField<String>(
+                                value: item['Type'],
+                                decoration: const InputDecoration(
+                                  labelText: 'Type',
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: const [
+                                  DropdownMenuItem(value: 'Required', child: Text('Required')),
+                                  DropdownMenuItem(value: 'Replaced', child: Text('Replaced')),
+                                ],
+                                onChanged: (val) => setState(() => item['Type'] = val),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                      ],
+                    ),
                   ),
-                ),
-              );
+                );
             },
           ),
 
